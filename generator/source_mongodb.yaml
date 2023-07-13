@@ -1,0 +1,7 @@
+connection_string: "mongodb://localhost:27017/"
+database_name: "experiments"
+collection_name: "sensor_data"
+log_path: "collection1.json"
+from: "2023-03-23T11:00:48"
+to: "2023-03-23T11:58:13"
+frequency: "original"
