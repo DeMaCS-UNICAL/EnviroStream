@@ -6,4 +6,4 @@ To run a query using I-DLV-sr follow the steps reported next:
 
  
 For example, to execute the query **q4** reading data from a MongoDB, you can use the following command:
-```java -jar I-DLV-sr-v2.0.0.jar --program=EnviroStream/Program/q4.idlvsr --py-script=EnviroStream/Script/external.py --mongodb-config=EnviroStream/Config/q4.yaml --mongodb --t-unit=min --windows-unit=min --now-format=min```
+```java -jar I-DLV-sr-v2.0.0.jar --program=EnviroStream/queries/program/q4.idlvsr --py-script=EnviroStream/queries/script/external.py --mongodb-config=EnviroStream/queries/config/q4.yaml --mongodb --t-unit=min --windows-unit=min --now-format=min```
