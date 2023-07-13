@@ -35,7 +35,7 @@ The queries are modeled using the input language of _I-DLV-sr_. The readme file 
 We have also included a dataset generator in the repository. This generator allows you to generate scalable datasets based on the _EnviroStream_ benchmark. You can use this tool to create larger datasets for testing and evaluating SR systems.
 
 ## Web Application for Continuous Online Reasoning
-In addition to the benchmark datasets and queries, we have developed a web application that enables continuous online reasoning. This application demonstrates how SR systems can perform real-time inference on streaming data. You can access the application through the _EnviroStream_ website.
+In addition to the benchmark datasets and queries, we have developed a web application that enables continuous online reasoning. This application demonstrates how SR systems can perform real-time inference on streaming data. You can access the application through the [_EnviroStream_ website](https://experiments.demacs.unical.it/).
 
 ## Links
 - [GitHub Repository](https://github.com/DeMaCS-UNICAL/EnviroStream)
