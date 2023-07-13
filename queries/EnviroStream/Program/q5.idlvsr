@@ -1,0 +1,19 @@
+#show number_of_high_detections/2.
+
+sensor("Weather Station Cosenza01").
+sensor("Weather Station Rende01").
+
+day_threshold(65).
+night_threshold(55).
+
+day :- @now.hour>=6, @now.hour<22. 
+night :- not day. 
+
+above_threshold(Sensor) :- noise(Sensor, Noise), day_threshold(T), day, &geq(Noise,T;). 
+above_threshold(Sensor) :- noise(Sensor, Noise), night_threshold(T), night, &geq(Noise,T;). 
+number_of_high_detections(Sensor,X) :- above_threshold(Sensor) count X in [60 min].
+high_detections(Sensor) :- number_of_high_detections(Sensor,X), X>0.
+number_of_high_detections(Sensor,0) :- sensor(Sensor), not high_detections(Sensor).
+%Le ultime due regole servono perchè il count non è definito quando X=0
+
+

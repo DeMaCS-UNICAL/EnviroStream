@@ -1,0 +1,37 @@
+copy_existing: "false"
+sources:
+  - ip: "localhost"
+    port: "27017"
+    databases:
+      - name: "experiments"
+        collections:
+          - name: "sensor_data"
+            schema:
+              - key: "_id"
+                type: "string"
+              - key: "id"
+                type: "string"
+              - key: "timestamp"
+                type: "string"
+              - key: "data"
+                type: "list"
+                item_schema:
+                  - key: "description"
+                    type: "string"
+                  - key: "value"
+                    type: "number"
+                  - key: "uom"
+                    type: "string"
+            event_time:
+              field: "timestamp"
+              format: "datetime"
+            predicates:
+              - name: "rain"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 12
+                    fields:
+                      - field: "value"
+                        asp_type: "string constant"

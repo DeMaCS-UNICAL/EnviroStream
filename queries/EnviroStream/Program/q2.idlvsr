@@ -1,0 +1,21 @@
+#show most_polluted_area_pm10/1.
+#show most_polluted_area_pm2_5/1.
+
+sensor("Weather Station Cosenza01").
+sensor("Weather Station Rende01").
+
+last_pm10(Sensor,X) :- pm10(Sensor,X) in [10 min].
+tot_last_pm10(Sensor,T) :- sensor(Sensor), #sum{X,Sensor: last_pm10(Sensor,X)} = T.
+count_last_pm10(Sensor,T) :- sensor(Sensor), #count{X,Sensor: last_pm10(Sensor,X)} = T.
+avg_last_pm10(Sensor,T/C) :- tot_last_pm10(Sensor,T), count_last_pm10(Sensor,C).
+
+last_pm2_5(Sensor,X) :- pm2_5(Sensor,X) in [10 min].
+tot_last_pm2_5(Sensor,T) :- sensor(Sensor), #sum{X,Sensor: last_pm2_5(Sensor,X)} = T.
+count_last_pm2_5(Sensor,T) :- sensor(Sensor), #count{X,Sensor: last_pm2_5(Sensor,X)} = T.
+avg_last_pm2_5(Sensor,T/C) :- tot_last_pm2_5(Sensor,T), count_last_pm2_5(Sensor,C).
+
+max_avg_pm10(MAX) :- MAX = #max{X: avg_last_pm10(Area, X)}.
+most_polluted_area_pm10(Sensor) :- avg_last_pm10(Sensor,MAX), max_avg_pm10(MAX).
+
+max_avg_pm2_5(MAX) :- MAX = #max{X: avg_last_pm2_5(Area, X)}.
+most_polluted_area_pm2_5(Sensor) :- avg_last_pm2_5(Sensor,MAX), max_avg_pm2_5(MAX).

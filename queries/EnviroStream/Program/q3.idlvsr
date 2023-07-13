@@ -1,0 +1,13 @@
+#show disconfort/2.
+#show humidex_level/2.
+
+sensor("Weather Station Cosenza01").
+sensor("Weather Station Rende01").
+
+humidex(Sensor, Humidex) :- temperature(Sensor, Temperature), humidity(Sensor, Humidity), &compute_humidex(Temperature, Humidity; Humidex).
+humidex_level(Sensor,1) :- humidex(Sensor,Humidex), Humidex>=20, Humidex<30.
+humidex_level(Sensor,2) :- humidex(Sensor,Humidex), Humidex>=30, Humidex<40.
+humidex_level(Sensor,3) :- humidex(Sensor,Humidex), Humidex>=40, Humidex<45.
+humidex_level(Sensor,4) :- humidex(Sensor,Humidex), Humidex>=45.
+
+disconfort(Sensor,L) :- humidex_level(Sensor, L), L>2, humidex_level(Sensor, L) at least 3 in [30 min].

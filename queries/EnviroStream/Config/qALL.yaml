@@ -1,0 +1,100 @@
+copy_existing: "false"
+sources:
+  - ip: "localhost"
+    port: "27017"
+    databases:
+      - name: "experiments"
+        collections:
+          - name: "sensor_data"
+            schema:
+              - key: "_id"
+                type: "string"
+              - key: "id"
+                type: "string"
+              - key: "timestamp"
+                type: "string"
+              - key: "data"
+                type: "list"
+                item_schema:
+                  - key: "description"
+                    type: "string"
+                  - key: "value"
+                    type: "number"
+                  - key: "uom"
+                    type: "string"
+            event_time:
+              field: "timestamp"
+              format: "datetime"
+            predicates:
+              - name: "wind_speed"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 0
+                    fields:
+                      - field: "value"
+                        asp_type: "string constant"
+              - name: "pm2_5"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 7
+                    fields:
+                      - field: "value"
+                        asp_type: "integer"
+              - name: "pm10"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 8
+                    fields:
+                      - field: "value"
+                        asp_type: "integer"
+              - name: "humidity"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 4
+                    fields:
+                      - field: "value"
+                        asp_type: "string constant"
+              - name: "temperature"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 5
+                    fields:
+                      - field: "value"
+                        asp_type: "string constant"
+              - name: "noise"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 6
+                    fields:
+                      - field: "value"
+                        asp_type: "string constant"
+              - name: "rain"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 12
+                    fields:
+                      - field: "value"
+                        asp_type: "string constant"
+              - name: "wind_speed"
+                terms:
+                  - field: "name"
+                    asp_type: "string constant"
+                  - field: "data"
+                    index: 0
+                    fields:
+                      - field: "value"
+                        asp_type: "string constant"

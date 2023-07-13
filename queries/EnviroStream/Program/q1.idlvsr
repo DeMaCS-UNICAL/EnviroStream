@@ -1,0 +1,19 @@
+#show too_high_pm10/1.
+#show too_high_pm2_5/1.
+
+maximum_allowed_pm10(50).
+maximum_allowed_pm2_5(25).
+sensor("Weather Station Cosenza01").
+sensor("Weather Station Rende01").
+
+last_pm10(Sensor,X) :- pm10(Sensor,X) in [10 min].
+tot_last_pm10(Sensor,T) :- sensor(Sensor), #sum{X,Sensor: last_pm10(Sensor,X)} = T.
+count_last_pm10(Sensor,T) :- sensor(Sensor), #count{X,Sensor: last_pm10(Sensor,X)} = T.
+avg_last_pm10(Sensor,T/C) :- tot_last_pm10(Sensor,T), count_last_pm10(Sensor,C).
+too_high_pm10(Sensor) :- avg_last_pm10(Sensor,A), A >=X, maximum_allowed_pm10(X).
+
+last_pm2_5(Sensor,X) :- pm2_5(Sensor,X) in [10 min].
+tot_last_pm2_5(Sensor,T) :- sensor(Sensor), #sum{X,Sensor: last_pm2_5(Sensor,X)} = T.
+count_last_pm2_5(Sensor,T) :- sensor(Sensor), #count{X,Sensor: last_pm2_5(Sensor,X)} = T.
+avg_last_pm2_5(Sensor,T/C) :- tot_last_pm2_5(Sensor,T), count_last_pm2_5(Sensor,C).
+too_high_pm2_5(Sensor) :- avg_last_pm2_5(Sensor,A), A >=X, maximum_allowed_pm2_5(X).

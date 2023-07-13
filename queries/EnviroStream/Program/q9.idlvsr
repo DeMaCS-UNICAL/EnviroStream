@@ -1,0 +1,24 @@
+#show wind_alert/1.
+#show beaufort_level/2.
+
+sensor("Weather Station Cosenza01").
+sensor("Weather Station Rende01").
+
+wind_now(Sensor,Wind,@now) :- wind_speed(Sensor, Wind).
+wind_10_min(Sensor, Wind, X) :- wind_now(Sensor, Wind, X) in [10 min].
+
+precedes(S,T1,T2) :- wind_10_min(S,R1,T1), wind_10_min(S,R2,T2), T1<T2.
+successor(S,X,Y) :- precedes(S,X,Y), not inBetween(S,X,Y).
+inBetween(S,X,Y) :- precedes(S,X,Z), precedes(S,Z,Y).
+first(S,T) :- wind_10_min(S,W,T), not hasPredecessor(S,T).
+last(S,T) :- wind_10_min(S,W,T), not hasSuccessor(S,T).
+hasPredecessor(S,X) :- successor(S,Y,X).
+hasSuccessor(S,Y) :- successor(S,Y,X).
+
+partialSum(S,T,W) :- first(S,T), wind_10_min(S,W,T). 
+partialSum(S,T2,W3) :- successor(S,T1,T2), wind_10_min(S,W2,T2), partialSum(S,T1,PS), &sum(PS,W2;W3).
+tot_wind_speed(S,W) :- last(S,T), partialSum(S,T,W).
+count_wind_speed(Sensor,C) :- sensor(Sensor), #count{T: wind_10_min(Sensor,W,T)} = C.
+avg_wind_speed(Sensor, Avg) :- &div(T,C;Avg), tot_wind_speed(Sensor,T), count_wind_speed(Sensor,C).
+beaufort_level(Sensor, L) :- avg_wind_speed(Sensor, Speed), &beaufort_scale(Speed; L).
+wind_alert(Sensor) :- beaufort_level(Sensor, L), L>=7.

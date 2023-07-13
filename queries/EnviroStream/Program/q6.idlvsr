@@ -1,0 +1,11 @@
+#show noise_pollution/1.
+
+sensor("Weather Station Cosenza01").
+sensor("Weather Station Rende01").
+
+threshold(85).
+
+above_threshold(Sensor) :- noise(Sensor, Noise), threshold(T), &geq(Noise,T;).
+noise(Sensor) :- noise(Sensor, Noise).
+above_threshold(Sensor) :- above_threshold(Sensor) in {1}, not noise(Sensor).
+noise_pollution(Sensor) :- above_threshold(Sensor) always in [60 min].

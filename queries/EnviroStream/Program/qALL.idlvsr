@@ -1,0 +1,182 @@
+%answer to q1
+#show too_high_pm10/1.
+#show too_high_pm2_5/1.
+%answer to q2
+#show most_polluted_area_pm10/1.
+#show most_polluted_area_pm2_5/1.
+%answer to q3
+#show disconfort/2.
+#show humidex_level/2.
+%answer to q4
+#show always_high_humidex/2.
+%answer to q5
+#show number_of_high_detections/2.
+%answer to q6
+#show noise_pollution/1.
+%answer to q7
+#show light_rain_intensity/1.
+#show moderate_rain_intensity/1.
+#show heavy_rain_intensity/1.
+%answer to q8
+#show least_rainy_area/1.
+%answer to q9
+#show wind_alert/1.
+#show beaufort_level/2.
+%answer to q10
+#show beaufort_level/2.
+#show beaufort_level_duration/3.
+
+
+maximum_allowed_pm10(50).
+maximum_allowed_pm2_5(25).
+sensor("Weather Station Cosenza01").
+sensor("Weather Station Rende01").
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Q1- Q2%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%% common rules to Q1 - Q2 %%%%%%%%%
+last_pm10(Sensor,X) :- pm10(Sensor,X) in [10 min].
+tot_last_pm10(Sensor,T) :- sensor(Sensor), #sum{X,Sensor: last_pm10(Sensor,X)} = T.
+count_last_pm10(Sensor,T) :- sensor(Sensor), #count{X,Sensor: last_pm10(Sensor,X)} = T.
+avg_last_pm10(Sensor,T/C) :- tot_last_pm10(Sensor,T), count_last_pm10(Sensor,C).
+
+
+last_pm2_5(Sensor,X) :- pm2_5(Sensor,X) in [10 min].
+tot_last_pm2_5(Sensor,T) :- sensor(Sensor), #sum{X,Sensor: last_pm2_5(Sensor,X)} = T.
+count_last_pm2_5(Sensor,T) :- sensor(Sensor), #count{X,Sensor: last_pm2_5(Sensor,X)} = T.
+avg_last_pm2_5(Sensor,T/C) :- tot_last_pm2_5(Sensor,T), count_last_pm2_5(Sensor,C).
+
+%%%%%%%%%Rules for Q1 %%%%%%%%%
+too_high_pm10(Sensor) :- avg_last_pm10(Sensor,A), A >=X, maximum_allowed_pm10(X).
+too_high_pm2_5(Sensor) :- avg_last_pm2_5(Sensor,A), A >=X, maximum_allowed_pm2_5(X).
+
+%%%%%%%%%Rules for Q2 %%%%%%%%%
+max_avg_pm10(MAX) :- MAX = #max{X: avg_last_pm10(Area, X)}.
+most_polluted_area_pm10(Sensor) :- avg_last_pm10(Sensor,MAX), max_avg_pm10(MAX).
+
+max_avg_pm2_5(MAX) :- MAX = #max{X: avg_last_pm2_5(Area, X)}.
+most_polluted_area_pm2_5(Sensor) :- avg_last_pm2_5(Sensor,MAX), max_avg_pm2_5(MAX).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Q3- Q4%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%% common rules to Q3 - Q4 %%%%%%%%%
+
+humidex(Sensor, Humidex) :- temperature(Sensor, Temperature), humidity(Sensor, Humidity), &compute_humidex(Temperature, Humidity; Humidex).
+humidex_level(Sensor,1) :- humidex(Sensor,Humidex), Humidex>=20, Humidex<30.
+humidex_level(Sensor,2) :- humidex(Sensor,Humidex), Humidex>=30, Humidex<40.
+humidex_level(Sensor,3) :- humidex(Sensor,Humidex), Humidex>=40, Humidex<45.
+humidex_level(Sensor,4) :- humidex(Sensor,Humidex), Humidex>=45.
+
+%%%%%%%%%Rules for Q3 %%%%%%%%%
+disconfort(Sensor,L) :- humidex_level(Sensor, L), L>2, humidex_level(Sensor, L) at least 3 in [30 min].
+
+%%%%%%%%%Rules for Q4 %%%%%%%%%
+temperature(Sensor):- temperature(Sensor, Temperature).
+humidex_level(Sensor, Level) :- humidex_level(Sensor, Level) in {1}, not temperature(Sensor).
+always_high_humidex(Sensor,L) :- humidex_level(Sensor, L), L>2, humidex_level(Sensor, L) always in [30 min].
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Q5%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+day_threshold(65).
+night_threshold(55).
+
+
+day :- @now.hour>=6, @now.hour<22. 
+night :- not day. 
+
+above_threshold_q5(Sensor) :- noise(Sensor, Noise), day_threshold(T), day, &geq(Noise,T;). 
+above_threshold_q5(Sensor) :- noise(Sensor, Noise), night_threshold(T), night, &geq(Noise,T;). 
+number_of_high_detections(Sensor,X) :- above_threshold_q5(Sensor) count X in [60 min].
+high_detections(Sensor) :- number_of_high_detections(Sensor,X), X>0.
+number_of_high_detections(Sensor,0) :- sensor(Sensor), not high_detections(Sensor).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Q6%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+threshold(85).
+
+above_threshold_q6(Sensor) :- noise(Sensor, Noise), threshold(T), &geq(Noise,T;).
+noise(Sensor) :- noise(Sensor, Noise).
+above_threshold_q6(Sensor) :- above_threshold_q6(Sensor) in {1}, not noise(Sensor).
+noise_pollution(Sensor) :- above_threshold_q6(Sensor) always in [60 min].
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Q7- Q8%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+light_rain_threshold(25).
+heavy_rain_threshold(76).
+
+
+%%%%%%%%% common rules to Q7 - Q8 %%%%%%%%%
+rain_now(Sensor,Rain,@now) :- rain(Sensor, Rain).
+rain_1_hour(Sensor, Rain, X) :- rain_now(Sensor, Rain, X) in [60 min].
+
+precedes(S,T1,T2) :- rain_1_hour(S,R1,T1), rain_1_hour(S,R2,T2), T1<T2.
+successor(S,X,Y) :- precedes(S,X,Y), not inBetween(S,X,Y).
+inBetween(S,X,Y) :- precedes(S,X,Z), precedes(S,Z,Y).
+first(S,T) :- rain_1_hour(S,R,T), not hasPredecessor(S,T).
+last(S,T) :- rain_1_hour(S,R,T), not hasSuccessor(S,T).
+hasPredecessor(S,X) :- successor(S,Y,X).
+hasSuccessor(S,Y) :- successor(S,Y,X).
+
+partialSum(S,T,R) :- first(S,T), rain_1_hour(S,R,T). 
+partialSum(S,T2,R3) :- successor(S,T1,T2), rain_1_hour(S,R2,T2), partialSum(S,T1,PS), &sum(PS,R2;R3).
+mm_rain_1_hour(S,R) :- last(S,T), partialSum(S,T,R).
+
+%%%%%%%%%Rules for Q7 %%%%%%%%%
+light_rain_intensity(Sensor) :- mm_rain_1_hour(Sensor, T), &leq(T,LTh;), light_rain_threshold(LTh), &gt(T,0;).
+moderate_rain_intensity(Sensor) :- mm_rain_1_hour(Sensor, T), light_rain_threshold(LTh), heavy_rain_threshold(HTh), &gt(T,LTh;), &leq(T,HTh;).
+heavy_rain_intensity(Sensor) :- mm_rain_1_hour(Sensor, T), heavy_rain_threshold(HTh), &gt(T,HTh;).
+
+%%%%%%%%%Rules for Q8 %%%%%%%%%
+
+precedes_mm(M1,M2) :- mm_rain_1_hour(S1,M1), mm_rain_1_hour(S2,M2), S1!=S2, &lt(M1,M2;).
+successor_mm(X,Y) :- precedes_mm(X,Y), not inBetween_mm(X,Y).
+inBetween_mm(X,Y) :- precedes_mm(X,Z), precedes_mm(Z,Y).
+min_mm_rain_1_hour(M) :- mm_rain_1_hour(S,M), not hasPredecessor_mm(M).
+
+hasPredecessor_mm(X) :- successor_mm(Y,X).
+least_rainy_area(Sensor) :- mm_rain_1_hour(Sensor, MIN), min_mm_rain_1_hour(MIN).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%Q9 - Q10%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%% common rules to Q9 - Q10 %%%%%%%%%
+wind_now(Sensor,Wind,@now) :- wind_speed(Sensor, Wind).
+wind_10_min(Sensor, Wind, X) :- wind_now(Sensor, Wind, X) in [10 min].
+
+precedes_q910(S,T1,T2) :- wind_10_min(S,R1,T1), wind_10_min(S,R2,T2), T1<T2.
+successor_q910(S,X,Y) :- precedes_q910(S,X,Y), not inBetween_q910(S,X,Y).
+inBetween_q910(S,X,Y) :- precedes_q910(S,X,Z), precedes_q910(S,Z,Y).
+first_q910(S,T) :- wind_10_min(S,W,T), not hasPredecessor_q910(S,T).
+last_q910(S,T) :- wind_10_min(S,W,T), not hasSuccessor_q910(S,T).
+hasPredecessor_q910(S,X) :- successor_q910(S,Y,X).
+hasSuccessor_q910(S,Y) :- successor_q910(S,Y,X).
+
+partialSum_q910(S,T,W) :- first_q910(S,T), wind_10_min(S,W,T). 
+partialSum_q910(S,T2,W3) :- successor_q910(S,T1,T2), wind_10_min(S,W2,T2), partialSum_q910(S,T1,PS), &sum(PS,W2;W3).
+tot_wind_speed(S,W) :- last_q910(S,T), partialSum_q910(S,T,W).
+count_wind_speed(Sensor,C) :- sensor(Sensor), #count{T: wind_10_min(Sensor,W,T)} = C.
+avg_wind_speed(Sensor, Avg) :- &div(T,C;Avg), tot_wind_speed(Sensor,T), count_wind_speed(Sensor,C).
+beaufort_level(Sensor, L) :- avg_wind_speed(Sensor, Speed), &beaufort_scale(Speed; L).
+
+%%%%%%%%%Rules for Q9 %%%%%%%%%
+wind_alert(Sensor) :- beaufort_level(Sensor, L), L>=7.
+
+%%%%%%%%%Rules for Q10 %%%%%%%%%
+ok(Sensor) :- beaufort_level(Sensor,_) in {1}.
+beaufort_level_duration(Sensor,1,1,@now,X):- beaufort_level(Sensor,X), not ok(Sensor).
+beaufort_level_duration(Sensor,X,T,@now,B):- beaufort_level_duration(Sensor,Y,T1,OldNow,B) in {1}, T=T1+D, D=@now-OldNow, X=Y+1, beaufort_level(Sensor,B), beaufort_level(Sensor,B) in {1}.
+beaufort_level_duration(Sensor,1,1,@now,X1):- beaufort_level(Sensor,X1), beaufort_level(Sensor,X) in {1}, X!=X1.
+
+beaufort_level_duration(Sensor,D,L) :- beaufort_level_duration(Sensor,_,D,_,L), beaufort_level(Sensor,L).
+
